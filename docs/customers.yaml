@@ -1,0 +1,211 @@
+openapi: 3.1.0
+info:
+  title: Customer Service API
+  description: CRUD API For Customer Service
+  version: 1.0.0
+
+servers:
+  - url: 'http://192.168.1.148:4000'
+    description: Local Server
+
+paths:
+  /customers:
+    get:
+      summary: Retrieve All Customers
+      description: Retrieve all customers from database
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerList'
+
+    post:
+      summary: Create New Customer(s)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewCustomer'
+      responses:
+        '201':
+          description: Customers(s) Created Successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+
+  /customers/{customers_id}:
+    get:
+      summary: Retrieve a specific customer data
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '404':
+          description: Customer Not Found
+
+    put:
+      summary: Update a specific customer
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerUpdate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateResponse'
+
+    delete:
+      summary: Delete a specific customer
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteResponse'
+
+  /customers/{customers_id}/kyc:
+    patch:
+      summary: Update kyc_status of a specific customer
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateKYC_Status'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateKYC_StatusResponse'
+
+components:
+  parameters:
+    CustomerId:
+      name: customers_id
+      in: path
+      required: true
+      description: ID of the customer
+      schema:
+        type: integer
+
+  schemas:
+
+    CustomerList:
+      type: array
+      items:
+        $ref: '#/components/schemas/CustomerResponse'
+
+    CustomerResponse:
+      type: object
+      properties:
+        _id:
+          type: string
+        customer_id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: integer
+        kyc_status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    NewCustomer:
+      type: object
+      required:
+        - name
+        - email
+        - phone
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: integer
+        kyc_status:
+          type: string
+
+    CustomerUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: integer
+        kyc_status:
+          type: string
+
+    UpdateResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        request:
+          type: object
+          properties:
+            type:
+              type: string
+            url:
+              type: string
+
+    DeleteResponse:
+      type: object
+      properties:
+        message:
+          type: string
+
+    UpdateKYC_Status:
+      type: object
+      required:
+        - kyc_status
+      properties:
+        kyc_status:
+          type: string
+
+    UpdateKYC_StatusResponse:
+      type: object
+      properties:
+        customer_id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: integer
+        kyc_status:
+          type: string

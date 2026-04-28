@@ -3,6 +3,8 @@ from pymongo import MongoClient
 from config import MONGO_URI, DB_NAME, COLLECTION_NAME
 from services.customer_service import CustomerService
 from routes.customer_routes import create_routes
+import swagger_ui
+
 
 app = Flask(__name__)
 
