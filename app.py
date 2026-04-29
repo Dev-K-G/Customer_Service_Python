@@ -5,8 +5,14 @@ from config import MONGO_URI, DB_NAME, COLLECTION_NAME
 from services.customer_service import CustomerService
 from routes.customer_routes import create_routes
 import logging
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
+
+PORT = int(os.getenv("PORT", 4000))  # fallback = 4000
 
 logging.basicConfig(level=logging.INFO)
 
@@ -38,4 +44,4 @@ def health():
     return jsonify({"status": "ok"}), 200
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=4000)
+    app.run(host="0.0.0.0", port=PORT, debug=True)

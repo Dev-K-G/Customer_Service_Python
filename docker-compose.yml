@@ -1,23 +1,57 @@
 version: "3.8"
 
 services:
+
+  # ======================
+  # CUSTOMER SERVICE
+  # ======================
   customer-service:
     build: .
     container_name: customer-service
     ports:
       - "4000:4000"
-    environment:
-      - MONGO_URI=mongodb://mongo:27017/
     depends_on:
       - mongo
+      - kafka
+    environment:
+      - PORT=4000
+      - MONGO_URI=mongodb://mongo:27017/customer_db
+      - KAFKA_BROKER=kafka:9092
 
+  # ======================
+  # MONGODB
+  # ======================
   mongo:
-    image: mongo:6
-    container_name: mongo-db
+    image: mongo
+    container_name: mongo
     ports:
       - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
 
-volumes:
-  mongo_data:
+  # ======================
+  # ZOOKEEPER (Kafka dependency)
+  # ======================
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+
+  # ======================
+  # KAFKA BROKER
+  # ======================
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1

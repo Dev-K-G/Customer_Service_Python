@@ -1,13 +1,12 @@
-import json
-
-from bson import ObjectId
-from flask import jsonify
-
 from models.customer_model import build_customer, serialize
+from utils.event_producer import EventProducer
+
 
 class CustomerService:
     def __init__(self, collection):
+        print(collection)
         self.collection = collection
+        self.event_producer = EventProducer()
 
     def get_all(self):
         return [serialize(c) for c in self.collection.find()]
@@ -21,6 +20,15 @@ class CustomerService:
         max_id = last_customer["customer_id"] if last_customer else 0
         customer = build_customer(data, max_id + 1)
         self.collection.insert_one(customer)
+
+        # EVENT: CustomerCreated
+        event = {
+            "event_type": "CustomerCreated",
+            "customer_id": customer["customer_id"],
+            "name": customer["name"]
+        }
+        self.event_producer.publish("customers", event)
+
         return serialize(customer)
 
     def create_customers(self, data):
@@ -56,6 +64,14 @@ class CustomerService:
             {"customer_id": int(customer_id)},
             {"$set": {"kyc_status": status.upper()}}
         )
+
+        if result.matched_count > 0:
+            event = {
+                "event_type": "KYC_UPDATED",
+                "customer_id": int(customer_id),
+                "kyc_status": status.upper()
+            }
+            self.event_producer.publish("customers", event)
 
         return result.matched_count > 0
 

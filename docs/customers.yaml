@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Customer Service API
-  description: CRUD API For Customer Service
+  description:   Customer Service CRUD API. Publishes events like CustomerCreated and KYC_UPDATED to Kafka topic "customers".
   version: 1.0.0
 
 servers:
@@ -43,7 +43,7 @@ paths:
         500:
           description: Internal Error
 
-  /customers/{customers_id}:
+  /customers/{customer_id}:
     get:
       summary: Retrieve a specific customer data
       parameters:
@@ -98,7 +98,7 @@ paths:
         500:
           description: Internal Error
 
-  /customers/{customers_id}/kyc:
+  /customers/{customer_id}/kyc:
     patch:
       summary: Update kyc_status of a specific customer
       parameters:
@@ -121,10 +121,16 @@ paths:
         500:
           description: Internal Error
 
+  /customers/health:
+    get:
+      summary: Health Check
+      responses:
+        '200':
+          description: Service is running
 components:
   parameters:
     CustomerId:
-      name: customers_id
+      name: customer_id
       in: path
       required: true
       description: ID of the customer
@@ -149,7 +155,7 @@ components:
           type: string
           format: email
         phone:
-          type: string
+          type: integer
         kyc_status:
           type: string
         created_at:
@@ -171,7 +177,7 @@ components:
           type: string
           format: email
         phone:
-          type: string
+          type: integer
         kyc_status:
           type: string
         created_at:
@@ -202,7 +208,7 @@ components:
           type: string
           format: email
         phone:
-          type: string
+          type: integer
         kyc_status:
           type: string
         created_at:

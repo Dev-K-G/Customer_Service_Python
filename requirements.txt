@@ -3,4 +3,6 @@ pymongo
 python-dotenv
 PyJWT
 kafka-python
+requests
+prometheus-flask-exporter
 prometheus_client

@@ -7,4 +7,4 @@ MONGO_URI = os.getenv(
 )
 
 DB_NAME = "bank_Dataset"
-COLLECTION_NAME = "bank_Customers"
+COLLECTION_NAME = "customers"
