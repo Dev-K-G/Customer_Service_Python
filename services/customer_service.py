@@ -19,9 +19,6 @@ class CustomerService:
     def create(self, data):
         last_customer = self.collection.find_one(sort=[("customer_id", -1)])
         max_id = last_customer["customer_id"] if last_customer else 0
-        print(data)
-        print(type(data))
-
         customer = build_customer(data, max_id + 1)
         self.collection.insert_one(customer)
         return serialize(customer)
@@ -36,7 +33,6 @@ class CustomerService:
             customers.append(customer)
         self.collection.insert_many(customers)
         return {"message": "Customers_Inserted"}
-
 
     def update(self, customer_id, data):
         result = self.collection.update_one(
