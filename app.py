@@ -1,17 +1,30 @@
 from flask import Flask, jsonify
 from pymongo import MongoClient
+from pymongo.errors import OperationFailure
 from config import MONGO_URI, DB_NAME, COLLECTION_NAME
 from services.customer_service import CustomerService
 from routes.customer_routes import create_routes
-import swagger_ui
-
+import logging
 
 app = Flask(__name__)
+
+logging.basicConfig(level=logging.INFO)
 
 # MongoDB setup
 client = MongoClient(MONGO_URI)
 db = client[DB_NAME]
 collection = db[COLLECTION_NAME]
+
+def init_indexes(col):
+    try:
+        col.create_index("email", unique=True, name="uniq_email")
+        col.create_index("phone", unique=True, name="uniq_phone")
+        col.create_index("customer_id", unique=True, name="uniq_customer_id")
+        logging.info("Indexes created successfully")
+    except OperationFailure as e:
+        logging.warning(f"Index creation issue: {e}")
+
+init_indexes(collection)
 
 # Service
 customer_service = CustomerService(collection)

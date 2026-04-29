@@ -1,4 +1,6 @@
-Flask
-requests
+flask
 pymongo
 python-dotenv
+PyJWT
+kafka-python
+prometheus_client
