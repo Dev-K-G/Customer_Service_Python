@@ -20,6 +20,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CustomerList'
+        404:
+          description: No customers found
+        500:
+          description: Internal Error
 
     post:
       summary: Create New Customer(s)
@@ -36,6 +40,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CustomerResponse'
+        500:
+          description: Internal Error
 
   /customers/{customers_id}:
     get:
@@ -51,6 +57,8 @@ paths:
                 $ref: '#/components/schemas/CustomerResponse'
         '404':
           description: Customer Not Found
+        500:
+          description: Internal Error
 
     put:
       summary: Update a specific customer
@@ -69,6 +77,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UpdateResponse'
+        404:
+          description: Customer not found
+        500:
+          description: Internal Error
 
     delete:
       summary: Delete a specific customer
@@ -81,6 +93,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeleteResponse'
+        404:
+          description: Customer not found
+        500:
+          description: Internal Error
 
   /customers/{customers_id}/kyc:
     patch:
@@ -100,6 +116,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UpdateKYC_StatusResponse'
+        404:
+          description: Customer not found
+        500:
+          description: Internal Error
 
 components:
   parameters:
@@ -121,8 +141,6 @@ components:
     CustomerResponse:
       type: object
       properties:
-        _id:
-          type: string
         customer_id:
           type: integer
         name:
@@ -131,7 +149,7 @@ components:
           type: string
           format: email
         phone:
-          type: integer
+          type: string
         kyc_status:
           type: string
         created_at:
@@ -145,15 +163,20 @@ components:
         - email
         - phone
       properties:
+        customer_id:
+          type: integer
         name:
           type: string
         email:
           type: string
           format: email
         phone:
-          type: integer
+          type: string
         kyc_status:
           type: string
+        created_at:
+          type: string
+          format: date-time
 
     CustomerUpdate:
       type: object
@@ -171,15 +194,20 @@ components:
     UpdateResponse:
       type: object
       properties:
-        message:
+        customer_id:
+          type: integer
+        name:
           type: string
-        request:
-          type: object
-          properties:
-            type:
-              type: string
-            url:
-              type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        kyc_status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
 
     DeleteResponse:
       type: object

@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from email_validator import validate_email, EmailNotValidError
 
 def create_routes(service):
     bp = Blueprint("customers", __name__)
@@ -29,14 +30,18 @@ def create_routes(service):
             data = request.json
             data = request.json
             if isinstance(data, dict):
-                if not data or not data.get("name") or not data.get("email"):
-                    return jsonify({"message": "Name and email required"}), 400
+                if not data or not data.get("name") or not data.get("email") or not data.get("phone"):
+                    return jsonify({"message": "Name, email and phone required"}), 400
+                if not validate_email(data.get("email")):
+                    return jsonify({"message": "Invalid email format"}), 400
                 customer = service.create(data)
                 return jsonify(customer), 201
             elif isinstance(data, list):
                 for dt in data:
-                    if not data or not dt.get("name") or not dt.get("email"):
-                        return jsonify({"message": "Name and email required"}), 400
+                    if not data or not dt.get("name") or not dt.get("email") or not dt.get("phone"):
+                        return jsonify({"message": "Name, email and phone required"}), 400
+                    if not validate_email(dt.get("email")):
+                        return jsonify({"message": "Invalid email format"}), 400
                 customers = service.create_customers(data)
                 return jsonify(customers), 201
         except Exception as e:
