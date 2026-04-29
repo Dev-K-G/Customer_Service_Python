@@ -4,7 +4,10 @@ from email_validator import validate_email, EmailNotValidError
 def create_routes(service):
     bp = Blueprint("customers", __name__)
 
-    def valid_kyc(status):
+    def validate_phone(number: str) -> bool:
+        return number.isdigit() and len(number) == 10
+
+    def validate_kyc(status):
         return status.upper() in ["PENDING", "VERIFIED", "REJECTED"]
 
     @bp.route("/customers", methods=["GET"])
@@ -38,7 +41,9 @@ def create_routes(service):
                     return jsonify({"message": "Name, email and phone required"}), 400
                 if not validate_email(data.get("email")):
                     return jsonify({"message": "Invalid email format"}), 400
-                if "kyc_status" in data and not valid_kyc(data.get("kyc_status")):
+                if not validate_phone(data.get("phone")):
+                    return jsonify({"message": "Invalid phone format"}), 400
+                if "kyc_status" in data and not validate_kyc(data.get("kyc_status")):
                     return {"message": "Invalid KYC"}, 400
                 customer = service.create(data)
                 return jsonify(customer), 201
@@ -48,7 +53,9 @@ def create_routes(service):
                         return jsonify({"message": "Name, email and phone required"}), 400
                     if not validate_email(dt.get("email")):
                         return jsonify({"message": "Invalid email format"}), 400
-                    if "kyc_status" in data and not valid_kyc(dt.get("kyc_status")):
+                    if not validate_phone(dt.get("phone")):
+                        return jsonify({"message": "Invalid phone format"}), 400
+                    if "kyc_status" in data and not validate_kyc(dt.get("kyc_status")):
                         return {"message": "Invalid KYC"}, 400
                 customers = service.create_customers(data)
                 return jsonify(customers), 201
@@ -60,9 +67,13 @@ def create_routes(service):
         try:
             data = request.json
             if data:
+                if not data.get("name") or not data.get("email") or not data.get("phone"):
+                    return jsonify({"message": "Name, email and phone required"}), 400
                 if "email" in data and not validate_email(data.get("email")):
                     return jsonify({"message": "Invalid email format"}), 400
-                if "kyc_status" in data and not valid_kyc(data.get("kyc_status")):
+                if "phone" in data and not validate_phone(data.get("phone")):
+                    return jsonify({"message": "Invalid phone format"}), 400
+                if "kyc_status" in data and not validate_kyc(data.get("kyc_status")):
                     return {"message": "Invalid KYC"}, 400
                 updated = service.update(customer_id, data)
                 if not updated:
@@ -79,7 +90,7 @@ def create_routes(service):
             data = request.json
             if not data or "kyc_status" not in data:
                 return jsonify({"message": "kyc_status required"}), 400
-            if not valid_kyc(data["kyc_status"]):
+            if not validate_kyc(data["kyc_status"]):
                 return {"message": "Invalid KYC"}, 400
             success = service.update_kyc(customer_id, data["kyc_status"])
             if not success:

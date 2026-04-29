@@ -1,8 +1,9 @@
+from dotenv import load_dotenv
 import os
 
+load_dotenv()
 MONGO_URI = os.getenv(
-    "MONGO_URI",
-    "mongodb://mongo:27017/"#"mongodb://mongo:27017/"
+    "MONGO_URI"
 )
 
 DB_NAME = "bank_Dataset"
