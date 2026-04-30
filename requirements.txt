@@ -7,3 +7,4 @@ requests
 prometheus-flask-exporter
 prometheus_client
 flask-cors
+email-validator

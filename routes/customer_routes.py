@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from email_validator import validate_email, EmailNotValidError
+from email_validator import validate_email
 from middlewares.auth_middleware import token_required, roles_required
 
 def create_routes(service):

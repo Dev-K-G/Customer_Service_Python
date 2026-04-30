@@ -9,6 +9,7 @@ from routes.auth_routes import create_auth_routes
 import logging
 import os
 from dotenv import load_dotenv
+from prometheus_flask_exporter import PrometheusMetrics
 
 
 load_dotenv()
@@ -18,6 +19,8 @@ app = Flask(__name__)
 PORT = int(os.getenv("PORT", 4000))  # fallback = 4000
 
 logging.basicConfig(level=logging.INFO)
+metrics = PrometheusMetrics(app)
+metrics.info('app_info', 'Customer Service', version='1.0')
 
 # MongoDB setup
 client = MongoClient(MONGO_URI)
@@ -53,4 +56,4 @@ def health():
     return jsonify({"status": "ok"}), 200
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=PORT, debug=True)
+    app.run(host="0.0.0.0", port=PORT)
