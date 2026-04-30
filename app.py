@@ -4,9 +4,12 @@ from pymongo.errors import OperationFailure
 from config import MONGO_URI, DB_NAME, COLLECTION_NAME
 from services.customer_service import CustomerService
 from routes.customer_routes import create_routes
+from services.auth_service import AuthService
+from routes.auth_routes import create_auth_routes
 import logging
 import os
 from dotenv import load_dotenv
+
 
 load_dotenv()
 
@@ -37,6 +40,12 @@ customer_service = CustomerService(collection)
 
 # Routes
 app.register_blueprint(create_routes(customer_service))
+
+# Service
+auth_service = AuthService()
+
+# Routes
+app.register_blueprint(create_auth_routes(auth_service))
 
 # Health check
 @app.route("/health", methods=["GET"])

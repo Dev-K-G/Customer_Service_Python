@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: customer-service
+  namespace: banking
+spec:
+  selector:
+    app: customer-service
+  ports:
+    - port: 4000
+      targetPort: 4000
+      nodePort: 30001
+  type: NodePort

@@ -1,8 +1,8 @@
-#pvc Mongo Optional
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: mongo-pvc
+  namespace: banking
 spec:
   accessModes:
     - ReadWriteOnce

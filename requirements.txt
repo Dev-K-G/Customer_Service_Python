@@ -6,3 +6,4 @@ kafka-python
 requests
 prometheus-flask-exporter
 prometheus_client
+flask-cors

@@ -1,18 +1,53 @@
 openapi: 3.1.0
+
 info:
   title: Customer Service API
-  description:   Customer Service CRUD API. Publishes events like CustomerCreated and KYC_UPDATED to Kafka topic "customers".
+  description: Customer Service CRUD API with JWT authentication and role-based access for KYC updates. Publishes events like CustomerCreated and KYC_UPDATED to Kafka topic "customers".
   version: 1.0.0
 
 servers:
-  - url: 'http://192.168.1.148:4000'
+  - url: 'http://localhost:4000'
     description: Local Server
 
+# GLOBAL SECURITY (applies by default)
+security:
+  - bearerAuth: []
+
 paths:
+
+  # =========================
+  # TOKEN API (PUBLIC)
+  # =========================
+  /token:
+    get:
+      summary: Generate JWT Token
+      description: Generate token using role query param (ADMIN / CUSTOMER / SERVICE)
+      security: []
+      parameters:
+        - name: role
+          in: query
+          required: true
+          schema:
+            type: string
+            example: ADMIN
+      responses:
+        '200':
+          description: Token generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+
+  # =========================
+  # CUSTOMER COLLECTION
+  # =========================
   /customers:
     get:
       summary: Retrieve All Customers
-      description: Retrieve all customers from database
+      description: Requires valid JWT token
       responses:
         '200':
           description: OK
@@ -20,32 +55,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CustomerList'
-        404:
+        '404':
           description: No customers found
-        500:
+        '500':
           description: Internal Error
 
     post:
       summary: Create New Customer(s)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/NewCustomer'
       responses:
         '201':
-          description: Customers(s) Created Successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CustomerResponse'
-        500:
+          description: Customers created successfully
+        '500':
           description: Internal Error
 
+  # =========================
+  # 👤 CUSTOMER BY ID
+  # =========================
   /customers/{customer_id}:
     get:
       summary: Retrieve a specific customer data
+      description: Requires JWT token
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/CustomerId'
       responses:
@@ -57,11 +88,18 @@ paths:
                 $ref: '#/components/schemas/CustomerResponse'
         '404':
           description: Customer Not Found
-        500:
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
           description: Internal Error
 
     put:
       summary: Update a specific customer
+      description: Requires JWT token
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/CustomerId'
       requestBody:
@@ -72,35 +110,44 @@ paths:
               $ref: '#/components/schemas/CustomerUpdate'
       responses:
         '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UpdateResponse'
-        404:
+          description: Updated successfully
+        '404':
           description: Customer not found
-        500:
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
           description: Internal Error
 
     delete:
       summary: Delete a specific customer
+      description: Requires JWT token
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/CustomerId'
       responses:
         '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeleteResponse'
-        404:
+          description: Deleted successfully
+        '404':
           description: Customer not found
-        500:
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
           description: Internal Error
 
+  # =========================
+  # KYC UPDATE (ADMIN ONLY)
+  # =========================
   /customers/{customer_id}/kyc:
     patch:
-      summary: Update kyc_status of a specific customer
+      summary: Update KYC status
+      description: Only ADMIN or SERVICE role can update KYC
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/CustomerId'
       requestBody:
@@ -111,23 +158,42 @@ paths:
               $ref: '#/components/schemas/UpdateKYC_Status'
       responses:
         '200':
-          description: OK
+          description: KYC updated successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UpdateKYC_StatusResponse'
-        404:
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (role mismatch)
+        '404':
           description: Customer not found
-        500:
+        '500':
           description: Internal Error
 
+  # =========================
+  # HEALTH CHECK (PUBLIC)
+  # =========================
   /customers/health:
     get:
       summary: Health Check
+      security: []
       responses:
         '200':
           description: Service is running
+
+# =========================
+# COMPONENTS
+# =========================
 components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   parameters:
     CustomerId:
       name: customer_id
@@ -162,28 +228,6 @@ components:
           type: string
           format: date-time
 
-    NewCustomer:
-      type: object
-      required:
-        - name
-        - email
-        - phone
-      properties:
-        customer_id:
-          type: integer
-        name:
-          type: string
-        email:
-          type: string
-          format: email
-        phone:
-          type: integer
-        kyc_status:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-
     CustomerUpdate:
       type: object
       properties:
@@ -197,30 +241,6 @@ components:
         kyc_status:
           type: string
 
-    UpdateResponse:
-      type: object
-      properties:
-        customer_id:
-          type: integer
-        name:
-          type: string
-        email:
-          type: string
-          format: email
-        phone:
-          type: integer
-        kyc_status:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-
-    DeleteResponse:
-      type: object
-      properties:
-        message:
-          type: string
-
     UpdateKYC_Status:
       type: object
       required:
@@ -228,6 +248,7 @@ components:
       properties:
         kyc_status:
           type: string
+          example: VERIFIED
 
     UpdateKYC_StatusResponse:
       type: object

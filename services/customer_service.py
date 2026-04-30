@@ -4,7 +4,6 @@ from utils.event_producer import EventProducer
 
 class CustomerService:
     def __init__(self, collection):
-        print(collection)
         self.collection = collection
         self.event_producer = EventProducer()
 

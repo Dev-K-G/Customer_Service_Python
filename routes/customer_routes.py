@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from email_validator import validate_email, EmailNotValidError
+from middlewares.auth_middleware import token_required, roles_required
 
 def create_routes(service):
     bp = Blueprint("customers", __name__)
@@ -21,6 +22,7 @@ def create_routes(service):
             return jsonify({"message": str(e)}), 500
 
     @bp.route("/customers/<customer_id>", methods=["GET"])
+    @token_required
     def get_one(customer_id):
         try:
             customer = service.get_one(customer_id)
@@ -85,6 +87,8 @@ def create_routes(service):
             return jsonify({"message": str(e)}), 500
 
     @bp.route("/customers/<customer_id>/kyc", methods=["PATCH"])
+    @token_required
+    @roles_required("ADMIN","SERVICE")
     def update_kyc(customer_id):
         try:
             data = request.json
