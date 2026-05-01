@@ -13,7 +13,7 @@ def create_routes(service):
         return status.upper() in ["PENDING", "VERIFIED", "REJECTED"]
 
     @bp.route("/customers", methods=["GET"])
-    @rate_limiter.Limiter.limit("1000 per minute")
+    #@rate_limiter.Limiter.limit("1000 per minute")
     def get_all():
         try:
             customers = service.get_all()
