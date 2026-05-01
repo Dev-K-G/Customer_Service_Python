@@ -9,7 +9,7 @@ class AuthService:
     def __init__(self):
         pass
 
-    def generate_token(self, role="CUSTOMER"):
+    def generate_token(self, role="SERVICE"):
         payload = {
             "role": role,
             "iat": datetime.datetime.utcnow(),

@@ -1,5 +1,11 @@
 from models.customer_model import build_customer, serialize
 from utils.event_producer import EventProducer
+from prometheus_client import Counter, Histogram, generate_latest
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+import time
+import logging
 
 
 class CustomerService:

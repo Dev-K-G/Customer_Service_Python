@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from email_validator import validate_email
 from middlewares.auth_middleware import token_required, roles_required
+from utils import rate_limiter
 
 def create_routes(service):
     bp = Blueprint("customers", __name__)
@@ -12,6 +13,7 @@ def create_routes(service):
         return status.upper() in ["PENDING", "VERIFIED", "REJECTED"]
 
     @bp.route("/customers", methods=["GET"])
+    @rate_limiter.Limiter.limit("1000 per minute")
     def get_all():
         try:
             customers = service.get_all()
