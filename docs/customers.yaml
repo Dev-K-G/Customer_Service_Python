@@ -150,6 +150,13 @@ paths:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/CustomerId'
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Unique key to ensure idempotent requests (prevents duplicate updates)
+          schema:
+            type: string
+            example: kyc-update-001
       requestBody:
         required: true
         content:
@@ -248,6 +255,7 @@ components:
       properties:
         kyc_status:
           type: string
+          enum: [PENDING, VERIFIED, REJECTED]
           example: VERIFIED
 
     UpdateKYC_StatusResponse:

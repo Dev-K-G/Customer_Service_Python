@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import os
 from monitoring.metrics import Metrics
 from monitoring.logger import logger
+from utils.idempotency import IdempotencyStore
 
 load_dotenv()
 
@@ -21,6 +22,10 @@ session.mount("http://", HTTPAdapter(max_retries=retries))
 
 def create_routes(service):
     bp = Blueprint("customers", __name__)
+
+    # create collection for idempotency
+    idempotency_collection = service.collection.database["idempotency_keys"]
+    idempotency_store = IdempotencyStore(idempotency_collection)
 
     def validate_phone(number: str) -> bool:
         return number.isdigit() and len(number) == 10
@@ -138,10 +143,16 @@ def create_routes(service):
             if not idempotency_key:
                 return jsonify({"message": "Idempotency-Key header required"}), 400
 
+
+            # Idempotency
+            idempotency_key = request.headers.get("Idempotency-Key")
+            if not idempotency_key:
+                return jsonify({"message": "Idempotency-Key header required"}), 400
+
             # -----------------------------
             # 1. CHECK IDENTITY REPLAY
             # -----------------------------
-            cached_response, cached_status = idempotencystore.get(idempotency_key)
+            cached_response, cached_status = idempotency_store.get(idempotency_key)
             if cached_response:
                 return jsonify(cached_response), cached_status
 
