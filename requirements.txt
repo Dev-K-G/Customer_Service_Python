@@ -7,9 +7,7 @@ requests
 prometheus-flask-exporter
 prometheus_client
 flask-cors
-flask_limiter
-flask_limiter.util
+flask-limiter
 urllib3
 slowapi
-functools
 kafka-python

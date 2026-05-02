@@ -1,20 +1,20 @@
+version: "3.8"
+
 services:
 
-  customer-service:
-    build:
-      context: ../Customer_Service_Python
+  app:
+    build: .
     container_name: customer-service
-    command: gunicorn app:app -b 0.0.0.0:4000
     ports:
       - "4000:4000"
     environment:
-      - MONGO_URI=mongodb://mongo:27017/customers_db
+      - MONGODB_URI=mongodb://mongo:27017/bank_Dataset
       - KAFKA_BROKER=kafka:9092
-      - JWT_SECRET=supersecret
+      - JWT_SECRET=supersecretkey
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8080/notifications
     depends_on:
       - mongo
       - kafka
-    restart: always
 
   mongo:
     image: mongo:6
@@ -23,40 +23,33 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
-    restart: always
 
-  # ======================
-  # ZOOKEEPER
-  # ======================
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
+    image: bitnami/zookeeper:3.9
     container_name: zookeeper
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2181:2181"
+      - ALLOW_ANONYMOUS_LOGIN=yes
 
-  # ======================
-  # KAFKA (ZOOKEEPER MODE)
-  # ======================
   kafka:
-    image: confluentinc/cp-kafka:7.5.0
+    image: bitnami/kafka:3.7
     container_name: kafka
-    depends_on:
-      - zookeeper
     ports:
       - "9092:9092"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+    depends_on:
+      - zookeeper
 
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
 
 volumes:
   mongo_data:

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  MONGODB_URI: mongodb://mongo:27017/bank_Dataset
+  KAFKA_BROKER: kafka:9092
