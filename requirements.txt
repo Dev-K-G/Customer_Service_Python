@@ -2,13 +2,14 @@ flask
 pymongo
 python-dotenv
 PyJWT
-kafka-python
+email-validator
 requests
 prometheus-flask-exporter
 prometheus_client
 flask-cors
 flask_limiter
 flask_limiter.util
-email-validator
+urllib3
 slowapi
 functools
+kafka-python

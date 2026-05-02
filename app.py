@@ -27,6 +27,10 @@ client = MongoClient(MONGO_URI)
 db = client[DB_NAME]
 collection = db[COLLECTION_NAME]
 
+# Create indexes at startup
+db.idempotency_keys.create_index("key", unique=True)
+db.idempotency_keys.create_index("created_at", expireAfterSeconds=86400)
+
 def init_indexes(col):
     try:
         col.create_index("email", unique=True, name="uniq_email")

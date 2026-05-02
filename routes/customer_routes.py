@@ -4,8 +4,8 @@ from middlewares.auth_middleware import token_required, roles_required
 import requests
 from dotenv import load_dotenv
 import os
-from utils.metrics import Metrics
-from utils.logger import logger
+from monitoring.metrics import Metrics
+from monitoring.logger import logger
 
 load_dotenv()
 
@@ -130,7 +130,23 @@ def create_routes(service):
                 return jsonify({"message": "kyc_status required"}), 400
             if not validate_kyc(data["kyc_status"]):
                 return {"message": "Invalid KYC"}, 400
+
+            # idempotency key from header
+            idempotency_key = request.headers.get("Idempotency-Key")
+
+            # (optional but recommended: fail fast if missing)
+            if not idempotency_key:
+                return jsonify({"message": "Idempotency-Key header required"}), 400
+
+            # -----------------------------
+            # 1. CHECK IDENTITY REPLAY
+            # -----------------------------
+            cached_response, cached_status = idempotencystore.get(idempotency_key)
+            if cached_response:
+                return jsonify(cached_response), cached_status
+
             success = service.update_kyc(customer_id, data["kyc_status"])
+
             if not success:
                 Metrics.KYC_UPDATE_FAILURE_COUNTER.inc()
                 return jsonify({"message": "Customer not found"}), 404
@@ -141,6 +157,7 @@ def create_routes(service):
             notification_url = os.getenv("NOTIFICATION_SERVICE_URL")
             if not notification_url:
                 raise ValueError("NOTIFICATION_SERVICE_URL not set")
+
             try:
                 payload = {
                     "message": f"KYC status is updated to {data['kyc_status']} for customer {customer_id}",
@@ -151,14 +168,18 @@ def create_routes(service):
                     json=payload,
                     timeout=5
                 )
+
+                session.post(notification_url, json=payload, timeout=5)
                 print("Notification response:", response.status_code, response.text)
                 Metrics.NOTIFICATION_CALL_COUNTER.inc()
 
-                # ⏱️ measure latency
+                # measure latency
                 with Metrics.NOTIFICATION_LATENCY.time():
                     response = session.post(notification_url, json=payload, timeout=5)
 
                 logger.info(f"Notification sent: {response.status_code}")
+
+                idempotency_store.save(idempotency_key, {"message": "KYC updated"} , 200)
 
             except requests.exceptions.RequestException as err:
                 Metrics.NOTIFICATION_FAILURE_COUNTER.inc()

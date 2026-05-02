@@ -1,6 +1,6 @@
 from models.customer_model import build_customer, serialize
 from utils.event_producer import EventProducer
-from utils.logger import logger
+from monitoring.logger import logger
 
 class CustomerService:
     def __init__(self, collection):
