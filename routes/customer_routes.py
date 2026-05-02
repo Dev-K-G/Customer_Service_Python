@@ -1,7 +1,23 @@
 from flask import Blueprint, request, jsonify
 from email_validator import validate_email
 from middlewares.auth_middleware import token_required, roles_required
-from utils import rate_limiter
+import requests
+from dotenv import load_dotenv
+import os
+from utils.metrics import Metrics
+from utils.logger import logger
+
+load_dotenv()
+
+# Retry-enabled session
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+session = requests.Session()
+retries = Retry(total=3, backoff_factor=1, status_forcelist=[500, 502, 503, 504])
+session.mount("http://", HTTPAdapter(max_retries=retries))
+
+
 
 def create_routes(service):
     bp = Blueprint("customers", __name__)
@@ -59,7 +75,7 @@ def create_routes(service):
                         return jsonify({"message": "Invalid email format"}), 400
                     if not validate_phone(dt.get("phone")):
                         return jsonify({"message": "Invalid phone format"}), 400
-                    if "kyc_status" in data and not validate_kyc(dt.get("kyc_status")):
+                    if "kyc_status" in dt and not validate_kyc(dt.get("kyc_status")):
                         return {"message": "Invalid KYC"}, 400
                 customers = service.create_customers(data)
                 return jsonify(customers), 201
@@ -82,6 +98,22 @@ def create_routes(service):
                 updated = service.update(customer_id, data)
                 if not updated:
                     return jsonify({"message": "Customer not found"}), 404
+                # Call notification service
+                notification_url = os.getenv("NOTIFICATION_SERVICE_URL")
+                try:
+                    payload = {
+                        "message": f"Some updates are performed for customer {customer_id}",
+                        "type": "EMAIL"
+                    }
+                    response = requests.post(
+                        notification_url,
+                        json=payload,
+                        timeout=5
+                    )
+                    print("Notification response:", response.status_code, response.text)
+                except requests.exceptions.RequestException as err:
+                    print("Notification service failed:", err)
+
                 return jsonify(updated), 200
             else:
                 return {"message": "Invalid input data"}, 400
@@ -100,9 +132,42 @@ def create_routes(service):
                 return {"message": "Invalid KYC"}, 400
             success = service.update_kyc(customer_id, data["kyc_status"])
             if not success:
+                Metrics.KYC_UPDATE_FAILURE_COUNTER.inc()
                 return jsonify({"message": "Customer not found"}), 404
+
+            Metrics.KYC_UPDATE_COUNTER.inc()
+
+            # Call notification service
+            notification_url = os.getenv("NOTIFICATION_SERVICE_URL")
+            if not notification_url:
+                raise ValueError("NOTIFICATION_SERVICE_URL not set")
+            try:
+                payload = {
+                    "message": f"KYC status is updated to {data['kyc_status']} for customer {customer_id}",
+                    "type": "EMAIL"
+                }
+                response = requests.post(
+                    notification_url,
+                    json=payload,
+                    timeout=5
+                )
+                print("Notification response:", response.status_code, response.text)
+                Metrics.NOTIFICATION_CALL_COUNTER.inc()
+
+                # ⏱️ measure latency
+                with Metrics.NOTIFICATION_LATENCY.time():
+                    response = session.post(notification_url, json=payload, timeout=5)
+
+                logger.info(f"Notification sent: {response.status_code}")
+
+            except requests.exceptions.RequestException as err:
+                Metrics.NOTIFICATION_FAILURE_COUNTER.inc()
+                print("Notification service failed:", err)
+
             return jsonify({"message": "KYC updated"}), 200
         except Exception as e:
+            Metrics.KYC_UPDATE_FAILURE_COUNTER.inc()
+            logger.error(f"Error updating KYC: {e}")
             return jsonify({"message": str(e)}), 500
 
     @bp.route("/customers/<customer_id>", methods=["DELETE"])

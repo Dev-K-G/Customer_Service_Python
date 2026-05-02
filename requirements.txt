@@ -11,3 +11,4 @@ flask_limiter
 flask_limiter.util
 email-validator
 slowapi
+functools
