@@ -5,9 +5,8 @@ PyJWT
 email-validator
 requests
 prometheus-flask-exporter
-prometheus_client
+prometheus-client
 flask-cors
 flask-limiter
-urllib3
 slowapi
 kafka-python
