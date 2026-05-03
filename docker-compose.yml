@@ -1,12 +1,26 @@
-version: "3.8"
+
 
 services:
 
-  app:
-    build: .
+  customer-service:
+    build: ./customer-service
     container_name: customer-service
     ports:
       - "4000:4000"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/customers_db
+      - KAFKA_BROKER=kafka:9092
+      - JWT_SECRET=supersecret
+    depends_on:
+      - mongo
+      - kafka
+    restart: always
+
+  app:
+    build: .
+    container_name: customer-service-app
+    ports:
+      - "4001:4000"
     environment:
       - MONGODB_URI=mongodb://mongo:27017/bank_Dataset
       - KAFKA_BROKER=kafka:9092
@@ -23,15 +37,18 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    restart: always
 
   zookeeper:
-    image: bitnami/zookeeper:3.9
+    image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - "2181:2181"
 
   kafka:
-    image: bitnami/kafka:3.7
+    image: confluentinc/cp-kafka:7.5.0
     container_name: kafka
     ports:
       - "9092:9092"
@@ -40,11 +57,13 @@ services:
       - ALLOW_PLAINTEXT_LISTENER=yes
       - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
       - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=1
     depends_on:
       - zookeeper
 
   prometheus:
-    image: prom/prometheus
+    image: prom/prometheus:latest
     container_name: prometheus
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
