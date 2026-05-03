@@ -11,3 +11,4 @@ flask-limiter
 slowapi
 kafka-python
 flasgger
+gunicorn
