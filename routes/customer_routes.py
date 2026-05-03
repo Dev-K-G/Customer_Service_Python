@@ -7,12 +7,12 @@ import os
 from monitoring.metrics import Metrics
 from monitoring.logger import logger
 from utils.idempotency import IdempotencyStore
-
-load_dotenv()
-
 # Retry-enabled session
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+
+
+load_dotenv()
 
 session = requests.Session()
 retries = Retry(total=3, backoff_factor=1, status_forcelist=[500, 502, 503, 504])

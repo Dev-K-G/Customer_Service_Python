@@ -10,6 +10,8 @@ import logging
 import os
 from dotenv import load_dotenv
 from prometheus_flask_exporter import PrometheusMetrics
+from flasgger import Swagger
+import yaml
 
 
 load_dotenv()
@@ -26,6 +28,18 @@ metrics.info('app_info', 'Customer Service', version='1.0')
 client = MongoClient(MONGO_URI)
 db = client[DB_NAME]
 collection = db[COLLECTION_NAME]
+
+#Swagger
+with open("docs/customers.yaml") as f:
+    template = yaml.safe_load(f)
+app.config['SWAGGER'] = {
+    'title': 'Customer API',
+    'uiversion': 3,
+    'openapi': '3.0.3',
+    'specs_route': '/api-docs/'
+}
+swagger = Swagger(app, template=template)
+
 
 # Create indexes at startup
 db.idempotency_keys.create_index("key", unique=True)
