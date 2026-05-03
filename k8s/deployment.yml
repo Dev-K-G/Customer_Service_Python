@@ -24,4 +24,4 @@ spec:
             - name: KAFKA_BROKER
               value: kafka:9092
             - name: NOTIFICATION_SERVICE_URL
-              value: http://notification-service:8080/notifications
+              value: http://notification-service:8084/notifications

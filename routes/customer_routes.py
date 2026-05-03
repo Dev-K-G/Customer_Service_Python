@@ -104,7 +104,7 @@ def create_routes(service):
                 if not updated:
                     return jsonify({"message": "Customer not found"}), 404
                 # Call notification service
-                notification_url = os.getenv("NOTIFICATION_SERVICE_URL","http://localhost:8084/notifications")
+                notification_url = os.getenv("NOTIFICATION_SERVICE_URL","http://notification-service:8084/notifications")
                 try:
                     payload = {
                         "message": f"Some updates are performed for customer {customer_id}",
@@ -166,7 +166,7 @@ def create_routes(service):
             Metrics.KYC_UPDATE_COUNTER.inc()
 
             # Call notification service
-            notification_url = os.getenv("NOTIFICATION_SERVICE_URL")
+            notification_url = os.getenv("NOTIFICATION_SERVICE_URL","http://notification-service:8084/notifications")
             if not notification_url:
                 raise ValueError("NOTIFICATION_SERVICE_URL not set")
 
