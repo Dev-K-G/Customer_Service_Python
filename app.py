@@ -29,10 +29,13 @@ metrics.info('app_info', 'Customer Service', version='1.0')
 #client = MongoClient(MONGO_URI)
 #db = client[DB_NAME]
 #collection = db[COLLECTION_NAME]
+
+
 def get_db():
-    retries = 10
+    retries = 2
     for i in range(retries):
         try:
+            MONGO_URI = os.getenv("MONGO_URI", "mongodb://mongo:27017/bank_Dataset")
             client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=3000)
             client.server_info()  # forces connection check
             db = client[DB_NAME]

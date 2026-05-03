@@ -3,8 +3,7 @@ import os
 
 load_dotenv()
 MONGO_URI = os.getenv(
-    "MONGO_URI",
-    "mongodb://localhost:27017/bank_Dataset"
+    "MONGO_URI"
 )
 
 DB_NAME = "bank_Dataset"
