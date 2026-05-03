@@ -1,5 +1,6 @@
 .env
-monitoring\__pycache__\logger.cpython-314.pyc
-monitoring\__pycache__\metrics.cpython-314.pyc
-routes\__pycache__\customer_routes.cpython-314.pyc
-services\__pycache__\customer_service.cpython-314.pyc
+logger.cpython-314.pyc
+metrics.cpython-314.pyc
+customer_routes.cpython-314.pyc
+customer_service.cpython-314.pyc
+idempotency.cpython-314.pyc
