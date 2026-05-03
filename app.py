@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from prometheus_flask_exporter import PrometheusMetrics
 from flasgger import Swagger
 import yaml
+import time
 
 
 load_dotenv()
@@ -25,8 +26,23 @@ metrics = PrometheusMetrics(app)
 metrics.info('app_info', 'Customer Service', version='1.0')
 
 # MongoDB setup
-client = MongoClient(MONGO_URI)
-db = client[DB_NAME]
+#client = MongoClient(MONGO_URI)
+#db = client[DB_NAME]
+#collection = db[COLLECTION_NAME]
+def get_db():
+    retries = 10
+    for i in range(retries):
+        try:
+            client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=3000)
+            client.server_info()  # forces connection check
+            db = client[DB_NAME]
+            return db
+        except Exception as e:
+            print(f"Mongo not ready, retrying... {i+1}/{retries}")
+            time.sleep(3)
+    raise Exception("MongoDB connection failed")
+
+db = get_db()
 collection = db[COLLECTION_NAME]
 
 #Swagger

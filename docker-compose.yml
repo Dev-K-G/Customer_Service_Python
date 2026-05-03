@@ -9,27 +9,14 @@ services:
     ports:
       - "4000:4000"
     environment:
-      - MONGO_URI=mongodb://mongo:27017/customers_db
+      - MONGO_URI=mongodb://mongo:27017/bank_Dataset
       - KAFKA_BROKER=kafka:9092
       - JWT_SECRET=supersecret
-    depends_on:
-      - mongo
-      - kafka
-    restart: always
-
-  app:
-    build: .
-    container_name: customer-service-app
-    ports:
-      - "4001:4000"
-    environment:
-      - MONGODB_URI=mongodb://mongo:27017/bank_Dataset
-      - KAFKA_BROKER=kafka:9092
-      - JWT_SECRET=supersecretkey
       - NOTIFICATION_SERVICE_URL=http://notification-service:8080/notifications
     depends_on:
       - mongo
       - kafka
+    restart: always
 
   mongo:
     image: mongo:6
