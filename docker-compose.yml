@@ -9,7 +9,7 @@ services:
     ports:
       - "4000:4000"
     environment:
-      - MONGO_URI=mongodb://mongo:27017/bank_Dataset
+      - MONGO_URI=mongodb://host.docker.internal:27017/bank_Dataset
       - KAFKA_BROKER=kafka:9092
       - JWT_SECRET=supersecret
       - NOTIFICATION_SERVICE_URL=http://notification-service:8080/notifications

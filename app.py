@@ -35,7 +35,8 @@ def get_db():
     retries = 2
     for i in range(retries):
         try:
-            MONGO_URI = os.getenv("MONGO_URI", "mongodb://mongo:27017/bank_Dataset")
+            #MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/bank_Dataset")   #To run locally
+            MONGO_URI = os.getenv("MONGO_URI", "mongodb://host.docker.internal:27017/bank_Dataset")
             client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=3000)
             client.server_info()  # forces connection check
             db = client[DB_NAME]
