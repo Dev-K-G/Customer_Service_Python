@@ -104,11 +104,12 @@ def create_routes(service):
                 if not updated:
                     return jsonify({"message": "Customer not found"}), 404
                 # Call notification service
-                notification_url = os.getenv("NOTIFICATION_SERVICE_URL")
+                notification_url = os.getenv("NOTIFICATION_SERVICE_URL","http://localhost:8084/notifications")
                 try:
                     payload = {
                         "message": f"Some updates are performed for customer {customer_id}",
-                        "type": "EMAIL"
+                        "type": "EMAIL",
+                        "email": data.get("email")
                     }
                     response = requests.post(
                         notification_url,
@@ -170,9 +171,11 @@ def create_routes(service):
                 raise ValueError("NOTIFICATION_SERVICE_URL not set")
 
             try:
+                cust = service.get_one(customer_id)
                 payload = {
                     "message": f"KYC status is updated to {data['kyc_status']} for customer {customer_id}",
-                    "type": "EMAIL"
+                    "type": "EMAIL",
+                    "email": cust["email"]
                 }
                 response = requests.post(
                     notification_url,
